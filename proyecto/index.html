@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autenticación con Firebase</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- style.css sigue igual -->
+</head>
+<body>
+    <div class="container" id="auth-container">
+        <h1>¡Bienvenido!</h1>
+        <div class="form-group">
+            <input type="text" id="email" placeholder="Correo electrónico" required>
+        </div>
+        <div class="form-group">
+            <input type="password" id="password" placeholder="Contraseña" required>
+        </div>
+        <div class="button-group">
+            <button id="register-btn">Registrar</button>
+            <button id="login-btn">Iniciar Sesión</button>
+        </div>
+        <p id="error-message" class="error"></p>
+    </div>
+
+    <div class="panel" id="user-panel" style="display: none;">
+        <div class="user-info">
+            <h2>Bienvenido, <span id="username-display"></span>!</h2>
+            <div class="dog-container">
+                <img src="https://placedog.net/200" alt="Perro feliz" class="dog-image">
+                <p class="dog-message">¡Has iniciado sesión correctamente!</p>
+            </div>
+            <button id="logout-btn">Cerrar Sesión</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK v9+ (modular) -->
+    <script type="module">
+        // Importa las funciones que necesitas de los SDKs que necesitas
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+        import { 
+            getAuth, 
+            createUserWithEmailAndPassword, 
+            signInWithEmailAndPassword, 
+            signOut,
+            onAuthStateChanged
+        } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-auth.js";
+
+        // Tu configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCdJpLLtR5gpvK00SbVTF8MT3N27HcqkAE",
+            authDomain: "farming-5beb1.firebaseapp.com",
+            projectId: "farming-5beb1",
+            storageBucket: "farming-5beb1.firebasestorage.app",
+            messagingSenderId: "187107202941",
+            appId: "1:187107202941:web:d15bf06cb3eeacf4021e14"
+        };
+
+        // Inicializa Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Elementos del DOM (el resto del código JavaScript sigue aquí...)
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const registerBtn = document.getElementById('register-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const errorMessage = document.getElementById('error-message');
+        const authContainer = document.getElementById('auth-container');
+        const userPanel = document.getElementById('user-panel');
+        const usernameDisplay = document.getElementById('username-display');
+
+        // Registrar nuevo usuario
+        registerBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            try {
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                // Registro exitoso
+                const user = userCredential.user;
+                showUserPanel(user);
+            } catch (error) {
+                // Manejo de errores
+                errorMessage.textContent = error.message;
+            }
+        });
+
+        // Iniciar sesión
+        loginBtn.addEventListener('click', async () => {
+            const email = emailInput.value;
+            const password = passwordInput.value;
+            
+            try {
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                // Inicio de sesión exitoso
+                const user = userCredential.user;
+                showUserPanel(user);
+            } catch (error) {
+                // Manejo de errores
+                errorMessage.textContent = error.message;
+            }
+        });
+
+        // Cerrar sesión
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await signOut(auth);
+                // Cierre de sesión exitoso
+                authContainer.style.display = 'block';
+                userPanel.style.display = 'none';
+                emailInput.value = '';
+                passwordInput.value = '';
+                errorMessage.textContent = '';
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+            }
+        });
+
+        // Mostrar panel de usuario
+        function showUserPanel(user) {
+            authContainer.style.display = 'none';
+            userPanel.style.display = 'block';
+            usernameDisplay.textContent = user.email.split('@')[0]; // Mostrar solo el nombre antes del @
+        }
+
+        // Observador de estado de autenticación
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Usuario ha iniciado sesión
+                showUserPanel(user);
+            } else {
+                // Usuario no ha iniciado sesión
+                authContainer.style.display = 'block';
+                userPanel.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
